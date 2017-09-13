@@ -1,4 +1,4 @@
-class Api::V1::MangasController < Api::V1::ApplicationController
+class Api::V1::MangasController < ApplicationController
   before_action :authenticate_user
   before_action :set_manga, only: [:show, :destroy]
 
@@ -12,8 +12,10 @@ class Api::V1::MangasController < Api::V1::ApplicationController
   end
 
   def create
-    @manga = Manga.new(manga_params)
-    @manga.save!
+    @manga = current_user.mangas.build(manga_params)
+    if @manga.save
+      render json: @manga, status: :created
+    end
   end
 
   def destroy

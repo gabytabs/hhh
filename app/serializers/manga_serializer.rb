@@ -1,3 +1,3 @@
 class MangaSerializer < ApplicationSerializer
-  attributes :id, :title, :episode
+  attributes :id, :title, :episode, :user_id
 end
