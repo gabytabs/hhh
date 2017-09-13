@@ -1,4 +1,5 @@
 class Api::V1::MangasController < Api::V1::ApplicationController
+  before_action :authenticate_user
   before_action :set_manga, only: [:show, :destroy]
 
   def index
