@@ -14,7 +14,7 @@ class Api::V1::MangasController < ApplicationController
   def create
     @manga = current_user.mangas.build(manga_params)
     if @manga.save
-      render json: @manga, status: :created
+      # render json: @manga, status: :created
     end
   end
 
@@ -29,7 +29,7 @@ class Api::V1::MangasController < ApplicationController
   end
 
   def manga_params
-    params.require(:manga).permit(:url, :title, :episode)
+    params.require(:manga).permit(:url, :title, :episode, manga_contents_attributes: [:img_url])
   end
 
 end

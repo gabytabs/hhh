@@ -6,8 +6,4 @@ class Api::V1::MangaContentsController < ApplicationController
   def show
   end
 
-  def create
-
-  end
-
 end
