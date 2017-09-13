@@ -6,4 +6,10 @@ class User < ApplicationRecord
 
   has_many :mangas
 
+  alias_method :authenticate, :valid_password?
+
+  def self.from_token_payload(payload)
+    self.find payload["sub"]
+  end
+
 end

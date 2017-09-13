@@ -1,4 +1,4 @@
-class Api::V1::MangasController < ApplicationController
+class Api::V1::MangasController < Api::V1::ApplicationController
   before_action :set_manga, only: [:show, :destroy]
 
   def index
@@ -28,4 +28,5 @@ class Api::V1::MangasController < ApplicationController
   def manga_params
     params.require(:manga).permit(:url, :title, :episode)
   end
+
 end
