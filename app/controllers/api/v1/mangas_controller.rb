@@ -15,17 +15,22 @@ class Api::V1::MangasController < ApplicationController
   end
 
   def create
-    @manga = current_user.mangas.build(manga_params)
-    @manga.save
+    @title = MangaTitle.find(params[:manga_title_id])
+    @manga = @title.mangas.build(manga_params)
 
-    manga_site = Nokogiri::HTML(open(@manga.url))
+    if @manga.save
+      manga_site = Nokogiri::HTML(open(@manga.url))
 
-    manga_site.css('div.vung-doc img').each do |img|
-      @manga.manga_contents.new(img_url: img.attr('src'))
-      @manga.save
+      manga_site.css('div.vung-doc img').each do |img|
+        @manga.manga_contents.new(img_url: img.attr('src'))
+        @manga.save
+      end
+
+      render json: @manga, status: :created
+
+    else
+      head(:unauthorized_entity)
     end
-
-    render json: @manga, status: :created
   end
 
   def destroy
@@ -35,11 +40,12 @@ class Api::V1::MangasController < ApplicationController
   private
 
   def set_manga
-    @manga = Manga.find(params[:id])
+    title = MangaTitle.find(params[:id])
+    @manga = title.mangas.find(params[:id])
   end
 
   def manga_params
-    params.require(:manga).permit(:url, :title, :episode)
+    params.require(:manga).permit(:url, :episode)
   end
 
 end
