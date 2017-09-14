@@ -4,7 +4,7 @@ class User < ApplicationRecord
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :trackable, :validatable
 
-  has_many :mangas
+  has_many :manga_titles
 
   alias_method :authenticate, :valid_password?
 

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170913225230) do
+ActiveRecord::Schema.define(version: 20170914163511) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -23,14 +23,22 @@ ActiveRecord::Schema.define(version: 20170913225230) do
     t.index ["manga_id"], name: "index_manga_contents_on_manga_id"
   end
 
-  create_table "mangas", force: :cascade do |t|
-    t.string "url"
+  create_table "manga_titles", force: :cascade do |t|
     t.string "title"
-    t.integer "episode"
+    t.integer "level"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id"
-    t.index ["user_id"], name: "index_mangas_on_user_id"
+    t.index ["user_id"], name: "index_manga_titles_on_user_id"
+  end
+
+  create_table "mangas", force: :cascade do |t|
+    t.string "url"
+    t.integer "episode"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "manga_title_id"
+    t.index ["manga_title_id"], name: "index_mangas_on_manga_title_id"
   end
 
   create_table "users", force: :cascade do |t|
@@ -51,5 +59,6 @@ ActiveRecord::Schema.define(version: 20170913225230) do
   end
 
   add_foreign_key "manga_contents", "mangas"
-  add_foreign_key "mangas", "users"
+  add_foreign_key "manga_titles", "users"
+  add_foreign_key "mangas", "manga_titles"
 end
