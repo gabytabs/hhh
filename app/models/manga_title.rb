@@ -1,0 +1,2 @@
+class MangaTitle < ApplicationRecord
+end
