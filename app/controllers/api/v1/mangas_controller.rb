@@ -6,8 +6,9 @@ class Api::V1::MangasController < ApplicationController
   before_action :set_manga, only: [:show, :destroy]
 
   def index
-    @mangas = Manga.all
-    render json: @mangas, each_serializer: MangaSerializer
+    title = MangaTitle.find(params[:manga_title_id])
+    mangas = title.mangas.all
+    render json: mangas, each_serializer: MangaSerializer
   end
 
   def show
