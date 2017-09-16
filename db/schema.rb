@@ -17,6 +17,7 @@ ActiveRecord::Schema.define(version: 20170914163511) do
 
   create_table "manga_contents", force: :cascade do |t|
     t.string "img_url"
+    t.integer "page_num"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "manga_id"
@@ -26,6 +27,7 @@ ActiveRecord::Schema.define(version: 20170914163511) do
   create_table "manga_titles", force: :cascade do |t|
     t.string "title"
     t.integer "level"
+    t.string "genre"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id"
@@ -33,7 +35,6 @@ ActiveRecord::Schema.define(version: 20170914163511) do
   end
 
   create_table "mangas", force: :cascade do |t|
-    t.string "url"
     t.integer "episode"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
