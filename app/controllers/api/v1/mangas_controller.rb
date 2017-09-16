@@ -28,7 +28,13 @@ class Api::V1::MangasController < ApplicationController
   end
 
   def destroy
-    @manga.destroy
+    title_manga = MangaTitle.find(params[:manga_title_id])
+
+    if @manga.destroy
+      render json: title_manga.mangas.all, each_serializer: MangaSerializer
+    else
+      head(:bad_request)
+    end
   end
 
   def web_scrap_manga(manga)
