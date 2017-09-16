@@ -6,8 +6,8 @@ class Api::V1::MangasController < ApplicationController
   before_action :set_manga, only: [:show, :destroy]
 
   def index
-    title = MangaTitle.find(params[:manga_title_id])
-    mangas = title.mangas.all
+    title_manga = MangaTitle.find(params[:manga_title_id])
+    mangas = title_manga.mangas.all
     render json: mangas, each_serializer: MangaSerializer
   end
 
@@ -20,15 +20,8 @@ class Api::V1::MangasController < ApplicationController
     @manga = @title.mangas.build(manga_params)
 
     if @manga.save
-      manga_site = Nokogiri::HTML(open(@manga.url))
-
-      manga_site.css('div.vung-doc img').each do |img|
-        @manga.manga_contents.new(img_url: img.attr('src'))
-        @manga.save
-      end
-
+      web_scrap_manga(@manga)
       render json: @manga, status: :created
-
     else
       head(:unauthorized_entity)
     end
@@ -38,10 +31,23 @@ class Api::V1::MangasController < ApplicationController
     @manga.destroy
   end
 
+  def web_scrap_manga(manga)
+    manga_site = Nokogiri::HTML(open(manga.url))
+
+    manga_site.css('div.vung-doc img').each do |img|
+      save_manga_img(manga, img)
+    end
+  end
+
+  def save_manga_img(manga, img)
+    manga.manga_contents.new(img_url: img.attr('src'))
+    manga.save
+  end
+
   private
 
   def set_manga
-    title = MangaTitle.find(params[:id])
+    title = MangaTitle.find(params[:manga_title_id])
     @manga = title.mangas.find(params[:id])
   end
 
