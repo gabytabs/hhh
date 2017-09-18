@@ -1,4 +1,4 @@
 class MangaTitleSerializer < ApplicationSerializer
-  attributes :id, :title, :level, :genre
+  attributes :id, :title, :type, :genre
   has_many :mangas
 end
