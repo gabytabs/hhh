@@ -1,5 +1,4 @@
-require 'nokogiri'
-require 'open-uri'
+require 'mechanize'
 
 class Api::V1::MangasController < ApplicationController
   before_action :authenticate_user, except: [:show, :index]
@@ -38,16 +37,61 @@ class Api::V1::MangasController < ApplicationController
   end
 
   def web_scrap_manga(manga)
-    manga_site = Nokogiri::HTML(open(params[:url])) #refactor to check valid url later
+    #Secret Agent Robot
+    agent = Mechanize.new { |agent|
+      agent.user_agent_alias = 'Mac Safari'
+    }
 
-    manga_site.css('div.vung-doc img').each_with_index do |img, i|
-      page_num = i + 1
-      save_manga_img(manga, img, page_num)
+    #Page wanted
+    page = agent.get(params[:url])
+
+    #Array of links of thumbnails for Site
+    links = get_links(page, agent)
+
+    #Webscrap imgs wanted
+    i = 1
+    while i < page_num(page)
+      link = links[i].click
+      epi = Nokogiri::HTML(link.body)
+      img = epi.css('img#img').attr('src')
+
+      save_manga_img(manga, img, i)
+
+      i += 1
     end
   end
 
+  def get_links(page, agent)
+    i = 0
+    links = []
+    while i < page_num(page)
+      num = i.to_s
+      if num.length == 1
+        num_w_zero = "0" + num
+        get_page = agent.page.link_with(text: num_w_zero)
+        links.push(get_page)
+      else
+        get_page = agent.page.link_with(text: num)
+        links.push(get_page)
+      end
+      i += 1
+    end
+    return links
+  end
+
+  def page_num(page)
+    get_page_number = Nokogiri::HTML(page.body)
+    pages = []
+
+    get_page_number.css('div.gdtm').each_with_index do |img, i|
+      pages.push(i+1)
+    end
+
+    return pages.last
+  end
+
   def save_manga_img(manga, img, page_num)
-    manga.manga_contents.new(img_url: img.attr('src'), page_num: page_num)
+    manga.manga_contents.new(img_url: img, page_num: page_num)
     manga.save
   end
 
