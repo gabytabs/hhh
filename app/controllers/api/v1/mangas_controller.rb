@@ -1,5 +1,3 @@
-require 'mechanize'
-
 class Api::V1::MangasController < ApplicationController
   before_action :authenticate_user, except: [:show, :index]
   before_action :set_manga, only: [:show, :destroy]
@@ -37,6 +35,7 @@ class Api::V1::MangasController < ApplicationController
   end
 
   def web_scrap_manga(manga)
+    require 'mechanize'
     #Secret Agent Robot
     agent = Mechanize.new { |agent|
       agent.user_agent_alias = 'Mac Safari'
@@ -49,31 +48,35 @@ class Api::V1::MangasController < ApplicationController
     links = get_links(page, agent)
 
     #Webscrap imgs wanted
-    i = 1
+    i = 0
     while i < page_num(page)
       link = links[i].click
       epi = Nokogiri::HTML(link.body)
+      # byebug
       img = epi.css('img#img').attr('src')
+      page_number = i + 1
 
-      save_manga_img(manga, img, i)
+      save_manga_img(manga, img, page_number)
 
       i += 1
     end
   end
 
   def get_links(page, agent)
-    i = 0
+    i = 1
     links = []
-    while i < page_num(page)
-      num = i.to_s
-      if num.length == 1
-        num_w_zero = "0" + num
-        get_page = agent.page.link_with(text: num_w_zero)
-        links.push(get_page)
-      else
-        get_page = agent.page.link_with(text: num)
-        links.push(get_page)
+    while i <= page_num(page)
+      stringify = i.to_s
+      link_text = "0"+stringify
+
+      get_page = agent.page.links.find do |link| 
+        if link.text == link_text
+          links.push(link)
+        elsif link.text == stringify && link.text != "1" && link.text != "2" && link.text != "3"
+          links.push(link)
+        end
       end
+      
       i += 1
     end
     return links

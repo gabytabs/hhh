@@ -35,7 +35,7 @@ class Api::V1::MangaTitlesController < ApplicationController
   private
 
   def manga_title_params
-    params.require(:manga_title).permit(:title, :type, :genre)
+    params.require(:manga_title).permit(:title, :manga_type, :genre)
   end
 
 end
