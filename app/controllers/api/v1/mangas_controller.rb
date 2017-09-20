@@ -1,3 +1,4 @@
+require 'mechanize'
 class Api::V1::MangasController < ApplicationController
   before_action :authenticate_user, except: [:show, :index]
   before_action :set_manga, only: [:show, :destroy]
@@ -35,7 +36,6 @@ class Api::V1::MangasController < ApplicationController
   end
 
   def web_scrap_manga(manga)
-    require 'mechanize'
     #Secret Agent Robot
     agent = Mechanize.new { |agent|
       agent.user_agent_alias = 'Mac Safari'
@@ -45,39 +45,90 @@ class Api::V1::MangasController < ApplicationController
     page = agent.get(params[:url])
 
     #Array of links of thumbnails for Site
-    links = get_links(page, agent)
+    pages = get_pages_links(page, agent)
 
-    #Webscrap imgs wanted
-    i = 0
-    while i < page_num(page)
-      link = links[i].click
-      epi = Nokogiri::HTML(link.body)
-      # byebug
-      img = epi.css('img#img').attr('src')
-      page_number = i + 1
+    #Open links inside links
+    links_set = get_img_links(pages, agent)
 
-      save_manga_img(manga, img, page_number)
+    #Webscrapper
+    links_set.each do |links|
+      i = 0
+      while i < links.length
+        link = links[i].click
+        epi = Nokogiri::HTML(link.body)
+        img = epi.css('img#img').attr('src')
+        page_number = links[i].text
 
-      i += 1
+        save_manga_img(manga, img, page_number)
+
+        i += 1
+      end
     end
   end
 
-  def get_links(page, agent)
+  def get_pages_links(page, agent)
     i = 1
-    links = []
-    while i <= page_num(page)
+    pages = []
+    while i <= page_num(page).last
       stringify = i.to_s
-      link_text = "0"+stringify
-
-      get_page = agent.page.links.find do |link| 
-        if link.text == link_text
-          links.push(link)
-        elsif link.text == stringify && link.text != "1" && link.text != "2" && link.text != "3"
-          links.push(link)
+      agent.page.links.find do |link|
+        if link.text == stringify && stringify.length == 1
+          pages.push(link)
         end
       end
-      
       i += 1
+    end
+    return pages
+  end
+
+  def get_img_links(pages, agent)
+    i = 0
+    links_of_page = []
+    while i < pages.length
+      page = pages[i].click
+      links = links_for_scrapping(page, agent, i)
+      links_of_page.push(links)
+      i += 1
+    end
+    return links_of_page
+  end
+
+  def links_for_scrapping(page, agent, page_i)
+    links = []
+
+    if page_i == 0
+      i = 1
+      while i <= page_num(page).last
+        stringify = i.to_s
+        num = "0"+stringify
+
+        agent.page.links.find { |link|
+          if link.text == num || link.text == "0"+num
+            links.push(link)
+          elsif link.text == stringify && stringify.length == 2
+            links.push(link)
+          end
+        }
+        i += 1
+      end
+    else
+      page_number = page_i * 40
+      i = 1
+
+      while i <= page_num(page).last
+        increment_page = page_number + i
+        stringify = increment_page.to_s
+        num = "0"+stringify
+
+        agent.page.links.find { |link|
+          if link.text == num
+            links.push(link)
+          elsif link.text == stringify && stringify.length == 3
+            links.push(link)
+          end
+        }
+        i += 1
+      end
     end
     return links
   end
@@ -90,7 +141,7 @@ class Api::V1::MangasController < ApplicationController
       pages.push(i+1)
     end
 
-    return pages.last
+    return pages
   end
 
   def save_manga_img(manga, img, page_num)
