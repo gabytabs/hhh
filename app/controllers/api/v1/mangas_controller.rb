@@ -35,6 +35,18 @@ class Api::V1::MangasController < ApplicationController
     end
   end
 
+  private
+
+  def set_manga
+    title = MangaTitle.find(params[:manga_title_id])
+    @manga = title.mangas.find(params[:id])
+  end
+
+  def manga_params
+    params.require(:manga).permit(:url, :episode)
+  end
+
+  # WEB SCRAPPING METHODS
   def web_scrap_manga(manga)
     #Secret Agent Robot
     agent = Mechanize.new { |agent|
@@ -65,6 +77,12 @@ class Api::V1::MangasController < ApplicationController
       end
     end
   end
+
+  def save_manga_img(manga, img, page_num)
+    manga.manga_contents.new(img_url: img, page_num: page_num)
+    manga.save
+  end
+
 
   def get_pages_links(page, agent)
     i = 1
@@ -142,22 +160,6 @@ class Api::V1::MangasController < ApplicationController
     end
 
     return pages
-  end
-
-  def save_manga_img(manga, img, page_num)
-    manga.manga_contents.new(img_url: img, page_num: page_num)
-    manga.save
-  end
-
-  private
-
-  def set_manga
-    title = MangaTitle.find(params[:manga_title_id])
-    @manga = title.mangas.find(params[:id])
-  end
-
-  def manga_params
-    params.require(:manga).permit(:url, :episode)
   end
 
 end
